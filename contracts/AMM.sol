@@ -72,6 +72,32 @@ contract AMM {
         shares[msg.sender] += share;
     }
 
+    function calculateWidthrawAmount(
+        uint256 _share
+    ) public view returns (uint256 _amount1, uint256 _amount2) {
+        require(_share <= totalShares, "Must be less than total shares");
+        _amount1 = (_share * balance1) / totalShares;
+        _amount2 = (_share * balance2) / totalShares;
+    }
+
+    function removeLiquidity(
+        uint256 _share
+    ) external returns (uint256 _amount1, uint256 _amount2) {
+        require(
+            _share <= shares[msg.sender],
+            "Cannot withdraw more shares than you have"
+        );
+        (_amount1, _amount2) = calculateWidthrawAmount(_share);
+        shares[msg.sender] -= _share;
+        totalShares -= _share;
+        balance1 -= _amount1;
+        balance2 -= _amount2;
+        K = balance1 * balance2;
+
+        token1.transfer(msg.sender, _amount1);
+        token2.transfer(msg.sender, _amount2);
+    }
+
     // Determine how many token2 tokens must be deposited when depositing liquidity for token1
     function calculateToken2Deposit(
         uint256 _amount1

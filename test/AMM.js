@@ -187,6 +187,50 @@ describe('AMM Contract', function () {
         amm.connect(investor1).swapToken1(ethers.parseUnits('1000000', 18))
       ).to.be.revertedWith('Swap amount exceeds pool balance');
     });
+
+    it('Removes Liquidity', async function () {
+      const { deployer, liquidityProvider, amm, token1, token2 } =
+        await loadFixture(deployFixture);
+      await token1.connect(liquidityProvider).approve(amm.target, amount);
+      await token2.connect(liquidityProvider).approve(amm.target, amount);
+
+      await amm.connect(liquidityProvider).addLiquidity(amount, amount);
+
+      // Check LP balance before removing tokens
+      balance = await token1.balanceOf(liquidityProvider.address);
+      console.log(
+        `Liquidity Provider Token 1 balance before removing funds ${ethers.formatEther(
+          balance
+        )}`
+      );
+
+      balance = await token2.balanceOf(liquidityProvider.address);
+      console.log(
+        `Liquidity Provider Token 2 balance before removing funds ${ethers.formatEther(
+          balance
+        )}`
+      );
+
+      // LP removes tokens from AMM Pool
+      let tx = await amm
+        .connect(liquidityProvider)
+        .removeLiquidity(ethers.parseUnits('50', 18));
+      await tx.wait();
+
+      balance = await token1.balanceOf(liquidityProvider.address);
+      console.log(
+        `Liquidity Provider Token 1 balance after removing funds ${ethers.formatEther(
+          balance
+        )}`
+      );
+
+      balance = await token2.balanceOf(liquidityProvider.address);
+      console.log(
+        `Liquidity Provider Token 2 balance after removing funds ${ethers.formatEther(
+          balance
+        )}`
+      );
+    });
   });
 
   // describe.skip('Swapping tokens', function () {
