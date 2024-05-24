@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
 import Navigation from './components/Navigation';
 import { ethers } from 'ethers';
 import Info from './components/Info';
@@ -8,30 +9,27 @@ import TOKEN_ABI from './abis/Token.json';
 import config from './config.json';
 import Loading from './components/Loading';
 
+import { loadAccount, loadProvider, loadNetwork } from './store/interaction';
+
 function App() {
-  const [account, setAccount] = useState(null);
-  const [provider, setProvider] = useState(null);
+  let account = '0x0...';
   const [accountBalance, setAccountBalance] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const dispatch = useDispatch();
 
   const loadBlockchainData = async () => {
-    const tempProvider = new ethers.BrowserProvider(window.ethereum);
-    setProvider(tempProvider);
+    const tempProvider = loadProvider(dispatch);
 
-    const { chainId } = await tempProvider.getNetwork();
+    const { chainId } = await loadNetwork(tempProvider, dispatch);
 
     if (chainId && config[chainId]) {
       const tempToken = new ethers.Contract(
-        config[chainId].token.address,
+        config[chainId].dapp.address,
         TOKEN_ABI,
         tempProvider
       );
 
-      const accounts = await window.ethereum.request({
-        method: 'eth_requestAccounts',
-      });
-      const tempAccount = ethers.getAddress(accounts[0]);
-      setAccount(tempAccount);
+      const tempAccount = await loadAccount(dispatch);
 
       const tempAccountBalance = ethers.formatUnits(
         await tempToken.balanceOf(tempAccount),

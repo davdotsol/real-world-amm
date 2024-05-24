@@ -97,6 +97,47 @@ async function main() {
   tx = await amm.connect(investor4).swapToken2(tokens(5));
   await tx.wait();
 
+  console.log(
+    `Investor 1 dapp balance ${ethers.formatEther(
+      await dapp.balanceOf(investor1)
+    )}`
+  );
+  console.log(
+    `Investor 1 usd balance ${ethers.formatEther(
+      await usd.balanceOf(investor1)
+    )}`
+  );
+  console.log(
+    `Investor 2 dapp balance ${ethers.formatEther(
+      await dapp.balanceOf(investor2)
+    )}`
+  );
+  console.log(
+    `Investor 2 dapp balance ${ethers.formatEther(
+      await usd.balanceOf(investor2)
+    )}`
+  );
+  console.log(
+    `Investor 3 dapp balance ${ethers.formatEther(
+      await dapp.balanceOf(investor3)
+    )}`
+  );
+  console.log(
+    `Investor 3 dapp balance ${ethers.formatEther(
+      await usd.balanceOf(investor3)
+    )}`
+  );
+  console.log(
+    `Investor 4 dapp balance ${ethers.formatEther(
+      await dapp.balanceOf(investor4)
+    )}`
+  );
+  console.log(
+    `Investor 4 dapp balance ${ethers.formatEther(
+      await usd.balanceOf(investor4)
+    )}`
+  );
+
   console.log(`Finished.\n`);
 }
 
