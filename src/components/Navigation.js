@@ -1,4 +1,26 @@
+import { useDispatch, useSelector } from 'react-redux';
+import Blockies from 'react-blockies';
+import { loadAccount, loadBalances } from '../store/interaction';
+import config from '../config.json';
+
 const Navigation = () => {
+  const chainId = useSelector((state) => state.provider.chainId);
+  const account = useSelector((state) => state.provider.account);
+  const tokens = useSelector((state) => state.tokens.contracts);
+  const amm = useSelector((state) => state.amm.contract);
+  const dispatch = useDispatch();
+
+  const onConnectHandler = async () => {
+    const account = await loadAccount(dispatch);
+    await loadBalances(amm, tokens, account, dispatch);
+  };
+
+  const networkHandler = async (e) => {
+    await window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: e.target.value }],
+    });
+  };
   return (
     <nav className="flex items-center justify-between flex-wrap bg-teal-500 p-6">
       <div className="flex items-center flex-shrink-0 text-white mr-6">
@@ -27,13 +49,34 @@ const Navigation = () => {
       </div>
       <div className="w-full block flex-grow lg:flex lg:items-center lg:w-auto">
         <div className="text-sm lg:flex-grow"></div>
-        <div>
-          <a
-            href="#"
-            className="inline-block text-sm px-4 py-2 leading-none border rounded text-white border-white hover:border-transparent hover:text-teal-500 hover:bg-white mt-4 lg:mt-0"
-          >
-            Connect
-          </a>
+        <div className="flex items-center">
+          <form className="mr-4">
+            <select
+              value={config[chainId] ? `0x${chainId.toString(16)}` : '0'}
+              onChange={networkHandler}
+              className="bg-teal-500 text-white border border-white rounded px-4 py-2"
+            >
+              <option value="0">Select Network</option>
+              <option value="0x7A69">Localhost</option>
+              <option value="0xAA36A7">Sepolia</option>
+            </select>
+          </form>
+          {account ? (
+            <div className="inline-block text-sm px-4 py-2 text-white mt-4 lg:mt-0 flex items-center">
+              <span className="mr-2">
+                {account.slice(0, 5) + '...' + account.slice(-4)}
+              </span>
+              <Blockies seed={account} size={10} scale={3} />
+            </div>
+          ) : (
+            <a
+              href="#"
+              className="inline-block text-sm px-4 py-2 leading-none border rounded text-white border-white hover:border-transparent hover:text-teal-500 hover:bg-white mt-4 lg:mt-0"
+              onClick={onConnectHandler}
+            >
+              Connect
+            </a>
+          )}
         </div>
       </div>
     </nav>

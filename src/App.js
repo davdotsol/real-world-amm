@@ -27,10 +27,15 @@ function App() {
     const chainId = await loadNetwork(tempProvider, dispatch);
 
     if (chainId) {
-      await loadAccount(dispatch);
+      // Fetch current account from Metamask when changed
+      window.ethereum.on('chainChanged', async () => {
+        window.location.reload();
+      });
+      window.ethereum.on('accountsChanged', async () => {
+        await loadAccount(dispatch);
+      });
       await loadTokens(tempProvider, chainId, dispatch);
       await loadAMM(tempProvider, chainId, dispatch);
-      // await loadBalances();
     }
 
     setIsLoading(false);

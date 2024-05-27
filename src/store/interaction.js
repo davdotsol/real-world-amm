@@ -26,7 +26,6 @@ export const loadAccount = async (dispatch) => {
     method: 'eth_requestAccounts',
   });
   const tempAccount = ethers.getAddress(accounts[0]);
-  console.log('tempaccount', tempAccount);
   dispatch(setAccount(tempAccount));
 
   return tempAccount;
@@ -65,8 +64,16 @@ export const loadAMM = async (provider, chainId, dispatch) => {
 
 // ------------------------
 // LOAD BALANCES AND SHARES
-export const loadBalances = async (tokens, account, dispatch) => {
+export const loadBalances = async (amm, tokens, account, dispatch) => {
   const balance1 = await tokens[0].balanceOf(account);
   const balance2 = await tokens[1].balanceOf(account);
-  dispatch(setBalances([balance1, balance2]));
+  dispatch(
+    setBalances([
+      ethers.formatUnits(balance1.toString(), 'ether'),
+      ethers.formatUnits(balance2.toString(), 'ether'),
+    ])
+  );
+
+  const shares = await amm.shares(account);
+  dispatch(setShares(ethers.formatUnits(shares.toString(), 'ether')));
 };
