@@ -4,12 +4,16 @@ import Navigation from './components/Navigation';
 import { ethers } from 'ethers';
 import Info from './components/Info';
 
-import TOKEN_ABI from './abis/Token.json';
-
-import config from './config.json';
 import Loading from './components/Loading';
 
-import { loadAccount, loadProvider, loadNetwork } from './store/interaction';
+import {
+  loadAccount,
+  loadProvider,
+  loadNetwork,
+  loadTokens,
+  loadBalances,
+  loadAMM,
+} from './store/interaction';
 
 function App() {
   let account = '0x0...';
@@ -20,22 +24,13 @@ function App() {
   const loadBlockchainData = async () => {
     const tempProvider = loadProvider(dispatch);
 
-    const { chainId } = await loadNetwork(tempProvider, dispatch);
+    const chainId = await loadNetwork(tempProvider, dispatch);
 
-    if (chainId && config[chainId]) {
-      const tempToken = new ethers.Contract(
-        config[chainId].dapp.address,
-        TOKEN_ABI,
-        tempProvider
-      );
-
-      const tempAccount = await loadAccount(dispatch);
-
-      const tempAccountBalance = ethers.formatUnits(
-        await tempToken.balanceOf(tempAccount),
-        18
-      );
-      setAccountBalance(tempAccountBalance);
+    if (chainId) {
+      await loadAccount(dispatch);
+      await loadTokens(tempProvider, chainId, dispatch);
+      await loadAMM(tempProvider, chainId, dispatch);
+      // await loadBalances();
     }
 
     setIsLoading(false);
