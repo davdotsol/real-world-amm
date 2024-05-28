@@ -1,6 +1,12 @@
 import { setAccount, setProvider, setNetwork } from './reducers/provider';
 import { setContracts, setSymbols, setBalances } from './reducers/tokens';
-import { setContract, setShares, setSwaps } from './reducers/amm';
+import {
+  setContract,
+  setShares,
+  swapRequest,
+  swapSuccess,
+  swapFailure,
+} from './reducers/amm';
 import { ethers } from 'ethers';
 
 import config from '../config.json';
@@ -76,4 +82,30 @@ export const loadBalances = async (amm, tokens, account, dispatch) => {
 
   const shares = await amm.shares(account);
   dispatch(setShares(ethers.formatUnits(shares.toString(), 'ether')));
+};
+
+// ------------------------
+// SWAP
+export const swap = async (provider, amm, token, symbol, amount, dispatch) => {
+  try {
+    dispatch(swapRequest());
+    let tx;
+
+    const signer = await provider.getSigner();
+
+    tx = await token.connect(signer).approve(amm.target, amount);
+    await tx.wait();
+
+    if (symbol === 'DDS') {
+      tx = await amm.connect(signer).swapToken1(amount);
+    } else {
+      tx = await amm.connect(signer).swapToken2(amount);
+    }
+    await tx.wait();
+
+    // Tell redux that swap has finished
+    dispatch(swapSuccess(tx.hash));
+  } catch (error) {
+    dispatch(swapFailure());
+  }
 };
