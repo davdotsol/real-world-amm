@@ -27,7 +27,7 @@ async function main() {
 
   const dapp = await hre.ethers.getContractAt(
     'Token',
-    config[chainId].dapp.address
+    config[chainId].dds.address
   );
   console.log(`Dapp token fetched ${dapp.target}`);
 
