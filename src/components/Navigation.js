@@ -21,6 +21,7 @@ const Navigation = () => {
       params: [{ chainId: e.target.value }],
     });
   };
+
   return (
     <nav className="flex items-center justify-between flex-wrap bg-teal-500 p-6">
       <div className="flex items-center flex-shrink-0 text-white mr-6">
@@ -56,7 +57,9 @@ const Navigation = () => {
               onChange={networkHandler}
               className="bg-teal-500 text-white border border-white rounded px-4 py-2"
             >
-              <option value="0">Select Network</option>
+              <option value="0" disabled>
+                Select Network
+              </option>
               <option value="0x7A69">Localhost</option>
               <option value="0xAA36A7">Sepolia</option>
             </select>
@@ -71,7 +74,7 @@ const Navigation = () => {
           ) : (
             <a
               href="#"
-              className="inline-block text-sm px-4 py-2 leading-none border rounded text-white border-white hover:border-transparent hover:text-teal-500 hover:bg-white mt-4 lg:mt-0"
+              className="inline-block text-sm px-4 py-3 leading-none border rounded text-white border-white hover:border-transparent hover:text-teal-500 hover:bg-white"
               onClick={onConnectHandler}
             >
               Connect
