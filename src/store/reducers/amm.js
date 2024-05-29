@@ -16,6 +16,11 @@ export const amm = createSlice({
       isSuccess: false,
       txHash: null,
     },
+    withdrawing: {
+      isWithdrawing: false,
+      isSuccess: false,
+      txHash: null,
+    },
   },
   reducers: {
     setContract: (state, action) => {
@@ -57,6 +62,21 @@ export const amm = createSlice({
       state.depositing.isSuccess = false;
       state.depositing.txHash = null;
     },
+    withdrawRequest: (state, action) => {
+      state.withdrawing.isWithdrawing = true;
+      state.withdrawing.isSuccess = false;
+      state.withdrawing.txHash = null;
+    },
+    withdrawSuccess: (state, action) => {
+      state.withdrawing.isWithdrawing = false;
+      state.withdrawing.isSuccess = true;
+      state.withdrawing.txHash = action.payload;
+    },
+    withdrawFailure: (state, action) => {
+      state.withdrawing.isWithdrawing = false;
+      state.withdrawing.isSuccess = false;
+      state.withdrawing.txHash = null;
+    },
   },
 });
 
@@ -69,5 +89,8 @@ export const {
   depositRequest,
   depositSuccess,
   depositFailure,
+  withdrawRequest,
+  withdrawSuccess,
+  withdrawFailure,
 } = amm.actions;
 export default amm.reducer;

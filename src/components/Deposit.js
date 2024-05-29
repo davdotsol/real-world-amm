@@ -24,19 +24,20 @@ const Deposit = () => {
   const dispatch = useDispatch();
 
   const amountHandler = async (e) => {
+    const val = e.target.value;
     if (e.target.id === 'input1') {
-      setInput1Amount(e.target.value);
+      setInput1Amount(val);
       // Fetch value from chain
-      const token1Amount = ethers.parseUnits(e.target.value, 'ether');
+      const token1Amount = ethers.parseUnits(val.toString(), 'ether');
       const result = await amm.calculateToken2Deposit(token1Amount);
       const token2Amount = ethers.formatUnits(result.toString(), 'ether');
 
       // Set Token 2 amount
       setInput2Amount(token2Amount);
     } else {
-      setInput2Amount(e.target.value);
+      setInput2Amount(val);
       // Fetch value from chain
-      const token2Amount = ethers.parseUnits(e.target.value, 'ether');
+      const token2Amount = ethers.parseUnits(val.toString(), 'ether');
       const result = await amm.calculateToken2Deposit(token2Amount);
       const token1Amount = ethers.formatUnits(result.toString(), 'ether');
 
@@ -78,6 +79,7 @@ const Deposit = () => {
                   id="input1"
                   min="0.0"
                   placeholder="0.0"
+                  step="any"
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded focus:ring-teal-500 focus:border-teal-500 block w-full p-2.5"
                   onChange={amountHandler}
                   value={input1Amount === 0 ? '' : input1Amount}
