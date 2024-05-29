@@ -6,6 +6,9 @@ import {
   swapRequest,
   swapSuccess,
   swapFailure,
+  depositRequest,
+  depositSuccess,
+  depositFailure,
 } from './reducers/amm';
 import { ethers } from 'ethers';
 
@@ -87,6 +90,35 @@ export const loadBalances = async (amm, tokens, account, dispatch) => {
 
     const shares = await amm.shares(account);
     dispatch(setShares(ethers.formatUnits(shares.toString(), 'ether')));
+  }
+};
+
+// ------------------------
+// ADD LIQUIDITY
+export const addLiquidity = async (
+  provider,
+  amm,
+  tokens,
+  amounts,
+  dispatch
+) => {
+  try {
+    dispatch(depositRequest());
+    let tx;
+
+    const signer = await provider.getSigner();
+
+    tx = await tokens[0].connect(signer).approve(amm.target, amounts[0]);
+    await tx.wait();
+
+    tx = await tokens[1].connect(signer).approve(amm.target, amounts[1]);
+    await tx.wait();
+
+    tx = await amm.connect(signer).addLiquidity(amounts[0], amounts[1]);
+    await tx.wait();
+    dispatch(depositSuccess(tx.hash));
+  } catch (error) {
+    dispatch(depositFailure());
   }
 };
 
