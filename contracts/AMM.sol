@@ -57,7 +57,10 @@ contract AMM {
         } else {
             uint256 share1 = (totalShares * _amount1) / balance1;
             uint256 share2 = (totalShares * _amount2) / balance2;
-            require(share1 == share2, "Must provide equal token amounts");
+            require(
+                (share1 / 10 ** 3) == (share2 / 10 ** 3),
+                "Must provide equal token amounts"
+            );
 
             share = share1;
         }
