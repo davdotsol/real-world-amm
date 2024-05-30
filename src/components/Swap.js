@@ -90,7 +90,13 @@ const Swap = () => {
   const swapHandler = async (e) => {
     e.preventDefault();
     setShowAlert(false);
+    setErrorMessage(''); // Reset error message
     if (!inputToken || !outputToken || inputToken === outputToken) {
+      return;
+    }
+
+    if (inputAmount <= 0) {
+      setErrorMessage('Swap amount must be greater than zero.');
       return;
     }
 

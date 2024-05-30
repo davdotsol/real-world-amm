@@ -9,6 +9,7 @@ const Deposit = () => {
   const [input1Amount, setInput1Amount] = useState(0);
   const [input2Amount, setInput2Amount] = useState(0);
   const [showAlert, setShowAlert] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const account = useSelector((state) => state.provider.account);
   const provider = useSelector((state) => state.provider.connection);
   const tokens = useSelector((state) => state.tokens.contracts);
@@ -25,23 +26,35 @@ const Deposit = () => {
 
   const amountHandler = async (e) => {
     const val = e.target.value;
+    setErrorMessage(''); // Reset error message
+
     if (e.target.id === 'input1') {
+      if (balances[0] === '0.0') {
+        setErrorMessage('Insufficient DDS balance.');
+        setInput1Amount(0);
+        setInput2Amount(0);
+        return;
+      }
+
       setInput1Amount(val);
       // Fetch value from chain
       const token1Amount = ethers.parseUnits(val.toString(), 'ether');
       const result = await amm.calculateToken2Deposit(token1Amount);
       const token2Amount = ethers.formatUnits(result.toString(), 'ether');
-
-      // Set Token 2 amount
       setInput2Amount(token2Amount);
     } else {
+      if (balances[1] === '0.0') {
+        setErrorMessage('Insufficient USD balance.');
+        setInput1Amount(0);
+        setInput2Amount(0);
+        return;
+      }
+
       setInput2Amount(val);
       // Fetch value from chain
       const token2Amount = ethers.parseUnits(val.toString(), 'ether');
-      const result = await amm.calculateToken2Deposit(token2Amount);
+      const result = await amm.calculateToken1Deposit(token2Amount);
       const token1Amount = ethers.formatUnits(result.toString(), 'ether');
-
-      // Set Token 1 amount
       setInput1Amount(token1Amount);
     }
   };
@@ -49,6 +62,13 @@ const Deposit = () => {
   const depositHandler = async (e) => {
     e.preventDefault();
     setShowAlert(false);
+    setErrorMessage(''); // Reset error message
+
+    if (input1Amount <= 0 || input2Amount <= 0) {
+      setErrorMessage('Deposit amounts must be greater than zero.');
+      return;
+    }
+
     const token1Amount = ethers.parseUnits(input1Amount, 'ether');
     const token2Amount = ethers.parseUnits(input2Amount, 'ether');
     await addLiquidity(
@@ -110,6 +130,9 @@ const Deposit = () => {
                 </span>
               </div>
             </div>
+            {errorMessage && (
+              <div className="text-sm text-red-500">{errorMessage}</div>
+            )}
             {isDepositing ? (
               <Loading />
             ) : (
@@ -127,28 +150,21 @@ const Deposit = () => {
           </div>
         )}
       </div>
-      {isDepositing ? (
+      {showAlert && (
         <Alert
-          message={'Depositing Pending...'}
-          txHash={null}
+          message={
+            isDepositing
+              ? 'Depositing Pending...'
+              : isSuccess
+              ? 'Depositing Successful...'
+              : 'Depositing Failed...'
+          }
+          txHash={isDepositing ? null : txHash}
           setShowAlert={setShowAlert}
         />
-      ) : isSuccess && showAlert ? (
-        <Alert
-          message={'Depositing Successful...'}
-          txHash={txHash}
-          setShowAlert={setShowAlert}
-        />
-      ) : !isSuccess && showAlert ? (
-        <Alert
-          message={'Depositing Failed...'}
-          txHash={null}
-          setShowAlert={setShowAlert}
-        />
-      ) : (
-        <></>
       )}
     </div>
   );
 };
+
 export default Deposit;
