@@ -105,6 +105,10 @@ contract AMM {
     function calculateToken2Deposit(
         uint256 _amount1
     ) public view returns (uint256 _amount2) {
+        require(
+            balance1 > 0,
+            "Cannot calculate deposit: balance of token 1 is zero"
+        );
         _amount2 = (balance2 * _amount1) / balance1;
     }
 
@@ -112,6 +116,10 @@ contract AMM {
     function calculateToken1Deposit(
         uint256 _amount2
     ) public view returns (uint256 _amount1) {
+        require(
+            balance2 > 0,
+            "Cannot calculate deposit: balance of token 2 is zero"
+        );
         _amount1 = (balance1 * _amount2) / balance2;
     }
 
