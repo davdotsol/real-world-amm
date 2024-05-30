@@ -8,10 +8,11 @@ import Alert from './Alert';
 const Swap = () => {
   const [price, setPrice] = useState(0);
   const [showAlert, setShowAlert] = useState(false);
-  const [inputToken, setInputToken] = useState(null);
-  const [outputToken, setOutputToken] = useState(null);
+  const [inputToken, setInputToken] = useState('');
+  const [outputToken, setOutputToken] = useState('');
   const [inputAmount, setInputAmount] = useState(0);
   const [outputAmount, setOutputAmount] = useState(0);
+  const [errorMessage, setErrorMessage] = useState('');
   const account = useSelector((state) => state.provider.account);
   const provider = useSelector((state) => state.provider.connection);
   const amm = useSelector((state) => state.amm.contract);
@@ -24,81 +25,84 @@ const Swap = () => {
   const dispatch = useDispatch();
 
   const getPrice = async () => {
+    if (!inputToken || !outputToken || inputToken === outputToken) {
+      setPrice(0);
+      return;
+    }
     const b1 = parseFloat(
       ethers.formatUnits((await amm.balance1()).toString(), 18).toString()
     );
     const b2 = parseFloat(
       ethers.formatUnits((await amm.balance2()).toString(), 18).toString()
     );
-    if (inputToken === outputToken) {
+
+    // Avoid division by zero
+    if (b1 === 0 || b2 === 0) {
       setPrice(0);
       return;
     }
 
-    if (inputToken === 'DDS') {
-      const p = b2 / b1;
-      setPrice(p.toFixed(2));
-    } else {
-      const p = b1 / b2;
-      setPrice(p);
-    }
+    const price = inputToken === 'DDS' ? b2 / b1 : b1 / b2;
+    setPrice(price.toFixed(2));
   };
 
   const inputHandler = async (e) => {
-    if (!inputToken || !outputToken) {
+    if (!inputToken || !outputToken || inputToken === outputToken) {
       return;
     }
 
-    if (inputToken === outputToken) {
-      return;
-    }
+    setInputAmount(e.target.value);
 
     if (inputToken === 'DDS') {
-      setInputAmount(e.target.value);
+      if (balances[0] === '0.0') {
+        setOutputAmount(0);
+        setErrorMessage('Insufficient DDS balance.');
+        return;
+      }
+      setErrorMessage('');
       const amount1 = ethers.parseUnits(e.target.value, 'ether');
       const result = await amm.calculateToken1Swap(amount1);
       const amount2 = ethers.formatUnits(result.toString(), 'ether');
-
       setOutputAmount(amount2.toString());
     } else {
-      setInputAmount(e.target.value);
+      if (balances[1] === '0.0') {
+        setOutputAmount(0);
+        setErrorMessage('Insufficient USD balance.');
+        return;
+      }
+      setErrorMessage('');
       const amount2 = ethers.parseUnits(e.target.value, 'ether');
       const result = await amm.calculateToken2Swap(amount2);
       const amount1 = ethers.formatUnits(result.toString(), 'ether');
-
       setOutputAmount(amount1.toString());
     }
   };
 
   useEffect(() => {
+    const fetchPrice = async () => {
+      await getPrice();
+    };
     if (inputToken && outputToken) {
-      getPrice();
+      fetchPrice();
     }
-  }, [inputToken, outputToken]);
+  }, [inputToken, outputToken, provider, amm]);
 
   const swapHandler = async (e) => {
     e.preventDefault();
     setShowAlert(false);
-    if (!inputToken || !outputToken) {
-      return;
-    }
-
-    if (inputToken === outputToken) {
+    if (!inputToken || !outputToken || inputToken === outputToken) {
       return;
     }
 
     const amount = ethers.parseUnits(inputAmount, 'ether');
-    // Swap token depending upon which one we're doing...
-    if (inputToken === 'DDS') {
-      await swap(provider, amm, tokens[0], inputToken, amount, dispatch);
-    } else {
-      await swap(provider, amm, tokens[1], inputToken, amount, dispatch);
-    }
+    const tokenIndex = inputToken === 'DDS' ? 0 : 1;
+
+    await swap(provider, amm, tokens[tokenIndex], inputToken, amount, dispatch);
     await loadBalances(amm, tokens, account, dispatch);
     await getPrice();
-
     setShowAlert(true);
   };
+
   return (
     <div>
       <div className="w-full mx-auto mt-10 max-w-sm p-4 bg-white border border-teal-400 rounded-lg shadow sm:p-6 md:p-8">
@@ -126,7 +130,7 @@ const Swap = () => {
                   type="number"
                   name="input"
                   id="input"
-                  onChange={(e) => inputHandler(e)}
+                  onChange={inputHandler}
                   min="0.0"
                   step="any"
                   placeholder="0.0"
@@ -135,10 +139,10 @@ const Swap = () => {
                 />
                 <select
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded px-4 py-2 ml-2"
-                  value={inputToken ? inputToken : 0}
+                  value={inputToken}
                   onChange={(e) => setInputToken(e.target.value)}
                 >
-                  <option value="0" disabled selected>
+                  <option value="" disabled>
                     Select Token
                   </option>
                   <option value="DDS">DDS</option>
@@ -177,10 +181,10 @@ const Swap = () => {
                 />
                 <select
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded px-4 py-2 ml-2"
-                  value={outputToken ? outputToken : 0}
+                  value={outputToken}
                   onChange={(e) => setOutputToken(e.target.value)}
                 >
-                  <option value="0" disabled selected>
+                  <option value="" disabled>
                     Select Token
                   </option>
                   <option value="DDS">DDS</option>
@@ -188,6 +192,9 @@ const Swap = () => {
                 </select>
               </div>
             </div>
+            {errorMessage && (
+              <div className="text-sm text-red-500">{errorMessage}</div>
+            )}
             {isSwapping ? (
               <Loading />
             ) : (
@@ -198,7 +205,6 @@ const Swap = () => {
                 Swap
               </button>
             )}
-
             <div className="text-sm font-medium text-gray-500">
               Exchange Rate: <span className="text-gray-900">{price}</span>
             </div>
@@ -209,27 +215,18 @@ const Swap = () => {
           </div>
         )}
       </div>
-
-      {isSwapping ? (
+      {showAlert && (
         <Alert
-          message={'Swap Pending...'}
-          txHash={null}
+          message={
+            isSwapping
+              ? 'Swap Pending...'
+              : isSuccess
+              ? 'Swap Successful...'
+              : 'Swap Failed...'
+          }
+          txHash={isSwapping ? null : txHash}
           setShowAlert={setShowAlert}
         />
-      ) : isSuccess && showAlert ? (
-        <Alert
-          message={'Swap Successful...'}
-          txHash={txHash}
-          setShowAlert={setShowAlert}
-        />
-      ) : !isSuccess && showAlert ? (
-        <Alert
-          message={'Swap Failed...'}
-          txHash={null}
-          setShowAlert={setShowAlert}
-        />
-      ) : (
-        <></>
       )}
     </div>
   );

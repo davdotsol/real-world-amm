@@ -16,10 +16,15 @@ const Navigation = () => {
   };
 
   const networkHandler = async (e) => {
-    await window.ethereum.request({
-      method: 'wallet_switchEthereumChain',
-      params: [{ chainId: e.target.value }],
-    });
+    try {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: e.target.value }],
+      });
+      console.log('`0x${chainId.toString(16)}`', `0x${chainId.toString(16)}`);
+    } catch (error) {
+      console.error('Network switch failed', error);
+    }
   };
 
   return (
@@ -55,15 +60,15 @@ const Navigation = () => {
         <div className="flex items-center">
           <form className="mr-4">
             <select
-              value={config[chainId] ? `0x${chainId.toString(16)}` : '0'}
+              value={config[chainId] ? `0x${chainId.toString(16)}` : ''}
               onChange={networkHandler}
               className="bg-teal-500 text-white border border-white rounded px-4 py-2"
             >
-              <option value="0" disabled>
+              <option value="" disabled>
                 Select Network
               </option>
               <option value="0x7A69">Localhost</option>
-              <option value="0xAA36A7">Sepolia</option>
+              <option value="0x11155111">Sepolia</option>
             </select>
           </form>
           {account ? (
@@ -77,7 +82,10 @@ const Navigation = () => {
             <a
               href="#"
               className="inline-block text-sm px-4 py-3 leading-none border rounded text-white border-white hover:border-transparent hover:text-teal-500 hover:bg-white"
-              onClick={onConnectHandler}
+              onClick={(e) => {
+                e.preventDefault();
+                onConnectHandler();
+              }}
             >
               Connect
             </a>
