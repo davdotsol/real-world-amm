@@ -55,7 +55,7 @@ function App() {
       <BrowserRouter>
         <Navigation />
 
-        <h1 className="my-4 text-center">Introducing My NFT</h1>
+        <h1 className="my-4 text-center">Introducing Real World AMM</h1>
         <Tabs />
         <Routes>
           <Route exact path="/" element={<Swap />} />

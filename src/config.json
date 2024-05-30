@@ -9,5 +9,16 @@
     "amm": {
       "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
     }
+  },
+  "11155111": {
+    "dds": {
+      "address": "0x09BA71798f59A7d0C788C787e1564B0c8dCa0a8C"
+    },
+    "usd": {
+      "address": "0x0098d647E057A5256cD2E2b0076B968Ee129aada"
+    },
+    "amm": {
+      "address": "0xFe68E9EFB7C7d74C4B3A7Cc431f34FD4C218E3a7"
+    }
   }
 }
