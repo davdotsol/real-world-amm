@@ -128,6 +128,7 @@ const Swap = () => {
                   id="input"
                   onChange={(e) => inputHandler(e)}
                   min="0.0"
+                  step="any"
                   placeholder="0.0"
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded focus:ring-teal-500 focus:border-teal-500 block w-full p-2.5"
                   disabled={!inputToken}
@@ -169,6 +170,7 @@ const Swap = () => {
                   id="output"
                   value={outputAmount === 0 ? '' : outputAmount}
                   min="0.0"
+                  step="any"
                   placeholder="0.0"
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded focus:ring-teal-500 focus:border-teal-500 block w-full p-2.5"
                   disabled

@@ -83,6 +83,7 @@ export const amm = createSlice({
 export const {
   setContract,
   setShares,
+  setSwaps,
   swapRequest,
   swapSuccess,
   swapFailure,
